@@ -1,99 +1,620 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Godot Eval Pro</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Quicksand:wght@400;700&display=swap" rel="stylesheet"><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script><script type="module">import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";import{getAuth,signInAnonymously,signInWithCustomToken,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";let cfg={};try{cfg=null||JSON.parse(typeof __firebase_config!=='undefined'?__firebase_config:'{}')}catch(e){}const aid=typeof __app_id!=='undefined'?__app_id:'evaluador-godot';window._0x_cr=!1;if(cfg&&cfg.apiKey){const a=initializeApp(cfg),au=getAuth(a),db=getFirestore(a);window.cloud={db,auth:au,appId:aid,doc,getDoc,setDoc};const i=async()=>{try{if(typeof __initial_auth_token!=='undefined'&&__initial_auth_token)await signInWithCustomToken(au,__initial_auth_token);else await signInAnonymously(au)}catch(e){}};i();onAuthStateChanged(au,async(u)=>{window.currentUser=u;window._0x_cr=!0;const lu=sessionStorage.getItem('last_docente_user');if(lu&&!window._0x_m){try{const p=doc(db,'artifacts',aid,'public','data','docentes',lu.toLowerCase()),s=await getDoc(p);if(s.exists())window._0x_ls(lu,s.data().config)}catch(e){}}})}else{window.cloud=null;window._0x_cr=!0}</script><style>body{font-family:'Quicksand',sans-serif;background-image:linear-gradient(rgba(15,23,42,.92),rgba(15,23,42,.92)),url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070');background-size:cover;background-position:center;background-attachment:fixed;color:#fff;min-height:100vh}.header-font{font-family:'Luckiest Guy',cursive}.card-glass{background:rgba(30,41,59,.85);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1)}.btn-user{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);transition:.2s}.btn-user.active{background-color:#10b981;border-color:#34d399;box-shadow:0 0 15px rgba(16,185,129,.4)}input.student-input,select.master-select{background:rgba(15,23,42,.95)!important;color:#fff!important;border:1px solid rgba(99,102,241,.4)!important;border-radius:8px;padding:8px;outline:0}.loader{border:3px solid rgba(255,255,255,.1);border-left-color:#fbbf24;border-radius:50%;width:20px;height:20px;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.modal-overlay{background:rgba(0,0,0,.85);backdrop-filter:blur(10px);transition:all .3s;z-index:100}.modal-overlay.hidden{opacity:0;pointer-events:none}@media print{.no-print{display:none!important}body{background:#fff!important;color:#000!important;padding:0!important}.card-glass{background:#fff!important;color:#000!important;border:1px solid #ddd!important;box-shadow:none!important}}</style></head>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Godot Eval Pro - Multi-Engine Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Librerías Externas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // CONFIGURACIÓN PARA GITHUB: Pega aquí tus credenciales si usas Firebase
+        const manualFirebaseConfig = null; 
+
+        let firebaseConfig = {};
+        try {
+            firebaseConfig = manualFirebaseConfig || JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        } catch (e) {
+            console.warn("Usando modo local sin persistencia.");
+        }
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'evaluador-godot';
+        window.isCloudReady = false;
+        
+        if (firebaseConfig && firebaseConfig.apiKey) {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            window.cloud = { db, auth, appId, doc, getDoc, setDoc };
+            
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (e) {
+                    console.error("Error en autenticación:", e);
+                }
+            };
+            initAuth();
+
+            onAuthStateChanged(auth, async (user) => {
+                window.currentUser = user;
+                window.isCloudReady = true;
+                
+                const lastUser = sessionStorage.getItem('last_docente_user');
+                if (lastUser && !window.isMasterMode) {
+                    try {
+                        const docPath = doc(db, 'artifacts', appId, 'public', 'data', 'docentes', lastUser.toLowerCase());
+                        const snap = await getDoc(docPath);
+                        if (snap.exists()) {
+                            window.loginSuccess(lastUser, snap.data().config);
+                        }
+                    } catch (err) {
+                        console.error("Error recuperando sesión:", err);
+                    }
+                }
+            });
+        } else {
+            window.cloud = null;
+            window.isCloudReady = true; 
+        }
+    </script>
+
+    <style>
+        body { 
+            font-family: 'Quicksand', sans-serif; 
+            background-image: linear-gradient(rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.92)), 
+                              url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: white; min-height: 100vh;
+        }
+        .header-font { font-family: 'Luckiest Guy', cursive; }
+        .card-glass { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-user { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); transition: 0.2s; }
+        .btn-user.active { background-color: #10b981; border-color: #34d399; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        
+        input.student-input, select.master-select { 
+            background: rgba(15, 23, 42, 0.95) !important; 
+            color: white !important; 
+            border: 1px solid rgba(99, 102, 241, 0.4) !important; 
+            border-radius: 8px; 
+            padding: 8px; 
+            outline: none;
+        }
+        
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #fbbf24;
+            border-radius: 50%;
+            width: 20px; height: 20px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .modal-overlay { background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); transition: all 0.3s; z-index: 100; }
+        .modal-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; padding: 0 !important; }
+            .card-glass { background: white !important; color: black !important; border: 1px solid #ddd !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
 <body class="p-4 md:p-10 flex flex-col items-center text-white">
+
+    <!-- Modal de Acceso Docente -->
     <div id="password-modal" class="fixed inset-0 flex items-center justify-center hidden no-print modal-overlay">
-        <div class="bg-slate-800 border-2 border-indigo-500 p-6 rounded-3xl shadow-2xl w-80 text-center">
-            <h3 class="header-font text-xl mb-2 uppercase">Acceso</h3>
-            <div id="offline-notice" class="hidden mb-4 p-3 bg-yellow-900/40 border border-yellow-600 rounded-xl text-[8px] uppercase">Modo Sesión (Sin Nube)</div>
-            <div class="space-y-3 mb-4"><input type="text" id="_u" class="w-full student-input text-center" placeholder="Usuario"><input type="password" id="_p" class="w-full student-input text-center" placeholder="Clave"></div>
-            <div class="flex gap-2"><button onclick="window._0x_cl()" class="flex-1 bg-white/10 py-2 rounded-xl text-xs font-bold uppercase">Cerrar</button><button id="login-btn" onclick="window._0x_auth()" class="flex-1 bg-indigo-600 py-2 rounded-xl text-xs font-bold uppercase transition-all">Entrar</button></div>
+        <div class="bg-slate-800 border-2 border-indigo-500 p-6 rounded-3xl shadow-2xl w-80 text-center text-white">
+            <h3 class="header-font text-xl mb-2 uppercase text-white">Acceso Docente</h3>
+            
+            <div id="offline-notice" class="hidden mb-4 p-3 bg-yellow-900/40 border border-yellow-600 rounded-xl">
+                <p class="text-[9px] font-bold uppercase text-yellow-200">Modo Sesión Local</p>
+                <p class="text-[8px] text-yellow-300">Clave requerida para entrar.</p>
+            </div>
+
+            <p class="text-[9px] text-slate-400 mb-6 uppercase tracking-wider">Identifícate para editar criterios</p>
+            <div class="space-y-3 mb-4">
+                <input type="text" id="docente-user-input" class="w-full student-input text-center" placeholder="Usuario">
+                <input type="password" id="docente-pass-input" class="w-full student-input text-center" placeholder="Clave">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.closePassModal()" class="flex-1 bg-white/10 py-2 rounded-xl text-xs font-bold uppercase">Cerrar</button>
+                <button id="login-btn" onclick="window.checkPass()" class="flex-1 bg-indigo-600 py-2 rounded-xl text-xs font-bold uppercase transition-all">Entrar</button>
+            </div>
         </div>
     </div>
+
+    <!-- Modal de Confirmación de Borrado -->
     <div id="delete-modal" class="fixed inset-0 z-[110] flex items-center justify-center hidden no-print modal-overlay">
-        <div class="bg-slate-800 border-2 border-red-500 p-6 rounded-3xl shadow-2xl w-80 text-center">
-            <h3 class="header-font text-xl mb-2">¿Eliminar?</h3>
-            <div class="flex gap-2 mt-4"><button onclick="window._0x_cdm()" class="flex-1 bg-white/10 py-2 rounded-xl text-xs">No</button><button onclick="window._0x_cfm()" class="flex-1 bg-red-600 py-2 rounded-xl text-xs">Borrar</button></div>
+        <div class="bg-slate-800 border-2 border-red-500 p-6 rounded-3xl shadow-2xl w-80 text-center text-white">
+            <h3 class="header-font text-xl mb-2 uppercase">¿Eliminar?</h3>
+            <p class="text-xs text-slate-300 mb-6">Esta acción no se puede deshacer.</p>
+            <div class="flex gap-2">
+                <button onclick="window.closeDeleteModal()" class="flex-1 bg-white/10 py-2 rounded-xl text-xs font-bold uppercase">No</button>
+                <button onclick="window.confirmDelete()" class="flex-1 bg-red-600 py-2 rounded-xl text-xs font-bold uppercase">Borrar</button>
+            </div>
         </div>
     </div>
-    <div class="no-print mb-6 flex gap-4 bg-black/40 p-2 rounded-2xl border border-white/10 shadow-lg">
-        <button onclick="window._0x_tu()" id="m-u" class="px-6 py-1.5 rounded-xl font-bold transition-all bg-indigo-600 text-sm">Alumno</button>
-        <button onclick="window._0x_om()" id="m-m" class="px-6 py-1.5 rounded-xl font-bold transition-all hover:bg-white/10 text-sm">Docente 🔒</button>
+
+    <!-- Selector de Roles -->
+    <div class="no-print mb-6 flex gap-4 bg-black/40 p-2 rounded-2xl border border-white/10 shadow-lg text-white">
+        <button onclick="window.changeToUser()" id="mode-user-btn" class="px-6 py-1.5 rounded-xl font-bold transition-all bg-indigo-600 text-sm">Alumno</button>
+        <button onclick="window.openPassModal()" id="mode-master-btn" class="px-6 py-1.5 rounded-xl font-bold transition-all hover:bg-white/10 text-sm">Docente 🔒</button>
     </div>
+
     <div id="main-card" class="w-full max-w-4xl card-glass rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500">
-        <div class="relative bg-gradient-to-r from-indigo-600/90 to-purple-800/90 p-8 text-center border-b border-white/10">
-            <h1 id="a-t" class="header-font text-4xl md:text-5xl uppercase tracking-widest"></h1>
-            <div id="c-d" class="absolute bottom-2 right-4 text-[10px] font-bold text-white/50"></div>
+        
+        <div class="relative bg-gradient-to-r from-indigo-600/90 to-purple-800/90 p-8 text-center border-b border-white/10 text-white">
+            <h1 id="app-title" class="header-font text-4xl md:text-5xl uppercase tracking-widest text-white">PROYECTO VIDEOJUEGO CON GODOT</h1>
+            <p id="mode-label" class="mt-2 text-indigo-200 font-bold uppercase text-[10px] tracking-[0.5em]">Evaluación Multimodal</p>
+            <div id="current-date-display" class="absolute bottom-2 right-4 text-[10px] font-bold text-white/50 uppercase">
+                FECHA: --/--/----
+            </div>
         </div>
-        <div class="p-6 md:px-10 bg-white/5 border-b border-white/10 flex flex-col md:flex-row items-center justify-center gap-8">
+
+        <div class="p-6 md:px-10 bg-white/5 border-b border-white/10 flex flex-col md:flex-row items-center justify-center gap-8 text-white">
             <div class="flex flex-col md:flex-row items-center gap-4 md:gap-12">
                 <div class="flex gap-4">
-                    <div class="w-24 md:w-32"><label class="block text-[9px] uppercase font-black text-indigo-300 mb-1 ml-1">Nombre</label><input type="text" id="s-n" class="student-input w-full text-[11px] py-1.5 shadow-inner"></div>
-                    <div class="w-24 md:w-32"><label class="block text-[9px] uppercase font-black text-indigo-300 mb-1 ml-1">Apellido</label><input type="text" id="s-s" class="student-input w-full text-[11px] py-1.5 shadow-inner"></div>
+                    <div class="w-24 md:w-32">
+                        <label class="block text-[9px] uppercase font-black text-indigo-300 mb-1 ml-1">Nombre</label>
+                        <input type="text" id="student-name" placeholder="Nombre" class="student-input w-full text-[11px] py-1.5 shadow-inner">
+                    </div>
+                    <div class="w-24 md:w-32">
+                        <label class="block text-[9px] uppercase font-black text-indigo-300 mb-1 ml-1">Apellido</label>
+                        <input type="text" id="student-surname" placeholder="Apellido" class="student-input w-full text-[11px] py-1.5 shadow-inner">
+                    </div>
                 </div>
-                <div class="flex flex-row items-center border-l border-white/10 pl-4 md:pl-12 min-w-[150px] gap-3">
-                    <span id="d-g" class="header-font text-5xl text-yellow-400"></span><span id="d-c" class="header-font text-3xl uppercase"></span>
+                <div class="flex flex-row items-center justify-center border-l border-white/10 pl-4 md:pl-12 min-w-[150px] gap-3">
+                    <span id="display-grade" class="header-font text-5xl text-yellow-400">1º</span>
+                    <span id="display-course" class="header-font text-3xl text-white uppercase">EBI</span>
                 </div>
             </div>
         </div>
-        <div class="p-4 md:p-8">
-            <table class="w-full text-left border-separate border-spacing-y-3">
-                <thead><tr class="text-indigo-400 uppercase text-[10px] font-black tracking-widest"><th class="px-4 py-2">Criterio</th><th class="px-4 py-2 text-center w-24 no-print-val" id="v-h" style="display:none">Puntos</th><th class="px-4 py-2 text-center w-32 no-print">Acción</th></tr></thead>
-                <tbody id="c-l"></tbody>
-            </table>
-            <div id="m-c" class="hidden no-print mt-6 border-t border-white/10 pt-6">
-                <div id="s-w" class="hidden bg-yellow-500/10 border border-yellow-500/50 p-3 rounded-xl mb-4 text-[10px] text-yellow-200 text-center uppercase font-bold">⚠️ Modo Sesión Libre: Los cambios no se sincronizarán</div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-                    <div class="bg-black/20 p-5 rounded-3xl border border-indigo-500/10 space-y-4">
-                        <select id="e-a-e" class="master-select text-xs w-full"><option value="gemini">Google Gemini 2.5</option><option value="groq">Groq (Llama 3.3)</option></select>
-                        <input type="password" id="e-a-k" class="bg-black/80 border border-indigo-500/50 rounded-xl px-4 py-2.5 text-xs text-center w-full text-green-400 font-mono outline-none" placeholder="API Key">
-                    </div>
-                    <div class="bg-black/20 p-5 rounded-3xl border border-white/5 space-y-3">
-                        <div class="flex gap-2"><select id="e-g-s" class="master-select text-xs w-full"><option value="1º">1º</option><option value="2º">2º</option><option value="3º">3º</option><option value="4º">4º</option><option value="5º">5º</option><option value="6º">6º</option><option value="7º">7º</option><option value="8º">8º</option><option value="9º">9º</option></select><select id="e-m-g" class="master-select text-xs w-full"><option value="9">Escala 9</option><option value="10">Escala 10</option><option value="12">Escala 12</option></select></div>
-                        <select id="e-c-s" class="master-select text-xs w-full"><option value="EBI">EBI</option><option value="EMS">EMS</option><option value="FPB">FPB</option><option value="EMP">EMP</option><option value="CEA">CEA</option><option value="Bachillerato">Bachillerato</option></select>
-                    </div>
-                </div>
-                <div class="flex gap-3 justify-center"><button onclick="window._0x_ai()" class="bg-blue-600 px-6 py-2.5 rounded-2xl font-bold text-xs">+ AÑADIR</button><button onclick="window._0x_sv()" id="save-btn" class="bg-green-600 px-8 py-2.5 rounded-2xl font-bold text-xs shadow-xl">💾 GUARDAR</button></div>
-            </div>
-        </div>
-        <div id="ai-section" class="hidden px-8 py-6 bg-indigo-900/40 border-t border-white/10">
-            <div class="flex justify-between mb-4"><span id="a-h-t" class="header-font text-xl text-yellow-400 uppercase"></span><div id="ai-loader" class="loader hidden"></div></div>
-            <div id="ai-output" class="text-sm italic bg-black/30 p-6 rounded-2xl border border-indigo-500/30 whitespace-pre-line"></div>
-        </div>
-        <div class="bg-black/40 p-6 md:p-10 flex items-center justify-between border-t border-white/10">
-            <div><p class="header-font text-lg text-indigo-300">Puntos Totales</p><div id="p-c" class="text-4xl md:text-6xl font-black"></div></div>
-            <div class="flex items-center gap-4"><div id="f-g" class="header-font text-5xl md:text-7xl px-8 py-3 rounded-2xl border-4 border-yellow-500 transition-all shadow-2xl"></div></div>
-        </div>
-    </div>
-    <div class="no-print mt-8 flex flex-wrap justify-center gap-3 pb-10">
-        <button onclick="window._0x_pr()" class="bg-white/10 px-5 py-2.5 rounded-2xl text-[10px] uppercase font-bold">🖨️ Imprimir</button>
-        <button onclick="window._0x_rep('report')" class="bg-purple-600 px-5 py-2.5 rounded-2xl text-[10px] font-bold uppercase">Informe IA ✨</button>
-        <button onclick="window._0x_rep('tips')" class="bg-yellow-500 px-5 py-2.5 rounded-2xl text-[10px] font-bold uppercase text-black">TIPS IA ✨</button>
-        <button onclick="window._0x_xls()" class="bg-green-600 px-8 py-2.5 rounded-2xl text-[10px] font-bold uppercase">💾 Exportar</button>
-    </div>
-    <div id="tst" class="fixed bottom-10 bg-green-500 px-8 py-4 rounded-2xl font-bold shadow-2xl opacity-0 transition-opacity z-50 pointer-events-none"></div>
 
-<script>
-(function(){
-    let _d={title:"PROYECTO VIDEOJUEGO CON GODOT",maxGrade:10,grade:"1º",courseType:"EBI",geminiKey:"",aiEngine:"gemini",criteria:[{text:"Movimiento Player",val:1},{text:"Salto simple",val:1},{text:"Doble salto",val:1},{text:"HUD Energía",val:1},{text:"Vidas corazones",val:1},{text:"Enemigos/Trampas",val:1},{text:"Detección daño",val:1},{text:"Game Over",val:1},{text:"Suavidad",val:1},{text:"Escenario",val:1},{text:"Visual UI",val:1},{text:"Sin errores",val:1},{text:"Creatividad",val:1},{text:"Lógica/Doc",val:1}]};
-    let _p=[];window._0x_m=!1;let _idx=-1,_cur=null;
-    const _sh=(m)=>{const t=document.getElementById('tst');t.innerText=m;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3000)};
-    window._0x_cl=()=>{document.getElementById('password-modal').classList.add('hidden');const b=document.getElementById('login-btn');if(b){b.disabled=!1;b.innerText="Entrar"}};
-    window._0x_om=()=>{const b=document.getElementById('login-btn');if(b){b.disabled=!1;b.innerText="Entrar"}if(!window.cloud)document.getElementById('offline-notice').classList.remove('hidden');document.getElementById('password-modal').classList.remove('hidden')};
-    window._0x_auth=async()=>{const u=document.getElementById('_u').value.trim(),k=document.getElementById('_p').value.trim(),b=document.getElementById('login-btn');if(!u||!k)return;b.disabled=!0;b.innerText="...";if(!window.cloud){window._0x_ls(u||"Docente",_d);_sh("🚀 Modo Sesión");return}try{if(!window._0x_cr)await new Promise(r=>setTimeout(r,500));const p=window.cloud.doc(window.cloud.db,'artifacts',window.cloud.appId,'public','data','docentes',u.toLowerCase()),s=await window.cloud.getDoc(p);if(s.exists()){if(s.data().password===k){window._0x_ls(u,s.data().config);sessionStorage.setItem('last_docente_user',u)}else{_sh("❌ Error");b.disabled=!1;b.innerText="Entrar"}}else{await window.cloud.setDoc(p,{password:k,config:_d});window._0x_ls(u,_d);sessionStorage.setItem('last_docente_user',u)}}catch(e){b.disabled=!1;b.innerText="Entrar"}};
-    window._0x_ls=(u,c)=>{_cur=u;_d={..._d,...c};_p=new Array(_d.criteria.length).fill(!1);window._0x_m=!0;window._0x_uui();window._0x_cl()};
-    window._0x_tu=()=>{window._0x_m=!1;_cur=null;sessionStorage.removeItem('last_docente_user');window._0x_uui()};
-    window._0x_uui=()=>{document.getElementById('m-u').classList.toggle('bg-indigo-600',!window._0x_m);document.getElementById('m-m').classList.toggle('bg-red-600',window._0x_m);document.getElementById('m-c').classList.toggle('hidden',!window._0x_m);document.getElementById('s-w').classList.toggle('hidden',!(!window.cloud&&window._0x_m));window._0x_rd()};
-    window._0x_rd=()=>{const t=document.getElementById('a-t');t.innerHTML=window._0x_m?`<input type="text" value="${_d.title}" id="e-t" class="bg-transparent w-full text-center border-none outline-none">`:_d.title;document.getElementById('d-g').innerText=_d.grade;document.getElementById('d-c').innerText=_d.courseType;document.getElementById('v-h').style.display=window._0x_m?'table-cell':'none';if(window._0x_m){document.getElementById('e-m-g').value=_d.maxGrade;document.getElementById('e-g-s').value=_d.grade;document.getElementById('e-c-s').value=_d.courseType;document.getElementById('e-a-k').value=_d.geminiKey;document.getElementById('e-a-e').value=_d.aiEngine}const l=document.getElementById('c-l');l.innerHTML=_d.criteria.map((it,i)=>`<tr class="bg-white/5"><td class="p-4 ${(_p[i]&&!window._0x_m)?'text-green-400 font-bold':''}">${window._0x_m?`<input type="text" value="${it.text}" id="tx-${i}" class="bg-transparent w-full">`:`${i+1}. ${it.text}`}</td><td class="p-4 text-center ${window._0x_m?'':'hidden'}"><input type="number" value="${it.val}" id="va-${i}" class="w-12 text-center bg-black/20 rounded"></td><td class="p-4 text-center">${window._0x_m?`<button onclick="window._0x_ri(${i})" class="text-red-400 text-[10px] uppercase font-bold">Borrar</button>`:`<button onclick="window._0x_tg(${i})" class="btn-user w-full py-2 rounded-xl text-[10px] font-bold ${_p[i]?'active':''}">${_p[i]?'✓ SI':'CUMPLE'}</button>`}</td></tr>`).join('');window._0x_calc()};
-    window._0x_tg=(i)=>{_p[i]=!_p[i];window._0x_rd()};
-    window._0x_ai=()=>{_d.criteria.push({text:"Nuevo",val:1});_p.push(!1);window._0x_rd()};
-    window._0x_ri=(i)=>{_idx=i;document.getElementById('delete-modal').classList.remove('hidden')};
-    window._0x_cdm=()=>{document.getElementById('delete-modal').classList.add('hidden')};
-    window._0x_cfm=()=>{_d.criteria.splice(_idx,1);_p.splice(_idx,1);window._0x_rd();window._0x_cdm()};
-    window._0x_calc=()=>{let l=0,m=0;_d.criteria.forEach((it,i)=>{m+=it.val;if(!window._0x_m&&_p[i])l+=it.val});document.getElementById('p-c').innerText=`${l}/${m}`;const n=m>0&&!window._0x_m?Math.max(1,Math.round((l/m)*_d.maxGrade)):"-";const g=document.getElementById('f-g');g.innerText=n;const pc=m>0?(l/m)*100:0;g.className=`header-font text-5xl md:text-7xl px-8 py-3 rounded-2xl border-4 border-yellow-500 transition-all shadow-2xl ${n==='-'?'bg-slate-800/80':(pc>=80?'bg-green-600/80':(pc>=60?'bg-orange-600/80':'bg-red-600/80'))}`};
-    window._0x_sv=async()=>{const b=document.getElementById('save-btn');b.disabled=!0;_d.title=document.getElementById('e-t').value;_d.maxGrade=parseInt(document.getElementById('e-m-g').value);_d.grade=document.getElementById('e-g-s').value;_d.courseType=document.getElementById('e-c-s').value;_d.geminiKey=document.getElementById('e-a-k').value.trim();_d.aiEngine=document.getElementById('e-a-e').value;_d.criteria.forEach((it,i)=>{it.text=document.getElementById(`tx-${i}`).value;it.val=parseFloat(document.getElementById(`va-${i}`).value)});if(!window.cloud){_sh("⚠️ Temporal");window._0x_rd();b.disabled=!1;return}try{const p=window.cloud.doc(window.cloud.db,'artifacts',window.cloud.appId,'public','data','docentes',_cur.toLowerCase());await window.cloud.setDoc(p,{config:_d},{merge:true});_sh("✅ Guardado");window._0x_rd()}catch(e){}_sh("Listo");b.disabled=!1};
-    window._0x_rep=async(t)=>{const s=document.getElementById('ai-section'),o=document.getElementById('ai-output'),l=document.getElementById('ai-loader'),h=document.getElementById('a-h-t');s.classList.remove('hidden');l.classList.remove('hidden');h.innerText=t==='tips'?'Tips Técnicos IA ✨':'Informe Pedagógico IA ✨';o.innerText="Consultando...";const c=_d.criteria.filter((it,i)=>_p[i]).map(x=>x.text),p=_d.criteria.filter((it,i)=>!_p[i]).map(x=>x.text),n=document.getElementById('f-g').innerText;const q=t==='tips'?`Godot: No alcanzados: ${p.join(',')}. 1 tip técnico corto por cada uno.`:`Alumno: ${document.getElementById('s-n').value} ${document.getElementById('s-s').value}. Proyecto: ${_d.title}. Nota: ${n}. Logros: ${c.join(',')}. Pendientes: ${p.join(',')}. Informe corto.`;try{const k=_d.geminiKey;const u=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${k}`;const r=await fetch(u,{method:'POST',body:JSON.stringify({contents:[{parts:[{text:q}]}]})});const rj=await r.json();o.innerText=rj.candidates[0].content.parts[0].text}catch(e){o.innerText="Error API."}finally{l.classList.add('hidden')}};
-    window._0x_pr=()=>setTimeout(()=>window.print(),300);
-    window._0x_xls=()=>{const d=[["EVALUACION"],["Alumno",`${document.getElementById('s-n').value} ${document.getElementById('s-s').value}`],["Nota",document.getElementById('f-g').innerText]];_d.criteria.forEach((it,i)=>d.push([it.text,_p[i]?'SI':'NO']));const ws=XLSX.utils.aoa_to_sheet(d),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Data");XLSX.writeFile(wb,"Eval.xlsx")};
-    window.onload=()=>{const n=new Date();document.getElementById('c-d').innerText=`FECHA: ${n.getDate()}/${n.getMonth()+1}/${n.getFullYear()}`;_p=new Array(_d.criteria.length).fill(!1);window._0x_rd()};
-})();
-</script></body></html>
+        <div class="p-4 md:p-8 text-white">
+            <table class="w-full text-left border-separate border-spacing-y-3">
+                <thead>
+                    <tr class="text-indigo-400 uppercase text-[10px] font-black tracking-widest">
+                        <th class="px-4 py-2">Criterio de Evaluación</th>
+                        <th class="px-4 py-2 text-center w-24 no-print-val" id="val-header" style="display:none">Puntos</th>
+                        <th class="px-4 py-2 text-center w-32 no-print">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="criteria-list"></tbody>
+            </table>
+
+            <div id="master-controls" class="hidden no-print mt-6 flex flex-col gap-6 border-t border-white/10 pt-6">
+                <div id="sync-warning" class="hidden bg-yellow-500/10 border border-yellow-500/50 p-3 rounded-xl mb-4 text-center">
+                    <p class="text-[10px] text-yellow-200 uppercase font-bold tracking-widest">⚠️ Modo Sesión Libre: Los cambios NO se guardarán al recargar.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-white">
+                    <div class="bg-black/20 p-5 rounded-3xl border border-indigo-500/10 space-y-4">
+                        <h4 class="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] border-b border-white/5 pb-2">Configuración IA</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1 ml-1">Motor Inteligencia Artificial</label>
+                                <select id="edit-ai-engine" class="master-select text-xs w-full">
+                                    <option value="gemini">Google Gemini 2.5</option>
+                                    <option value="groq">Groq (Llama 3.3)</option>
+                                    <option value="openrouter">OpenRouter (Mistral/Gemini)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1 ml-1">API Key Personal</label>
+                                <input type="password" id="edit-api-key" class="bg-black/80 border border-indigo-500/50 rounded-xl px-4 py-2.5 text-xs text-center w-full text-green-400 font-mono outline-none focus:border-green-500 transition-all shadow-[inset_0_0_15px_rgba(0,0,0,0.9)]" placeholder="Pega tu clave aquí">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/20 p-5 rounded-3xl border border-white/5 space-y-4">
+                        <h4 class="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] border-b border-white/5 pb-2">Configuración Académica</h4>
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1 ml-1">Grado</label>
+                                    <select id="edit-grade-select" class="master-select text-xs w-full">
+                                        <option value="1º">1º</option><option value="2º">2º</option><option value="3º">3º</option>
+                                        <option value="4º">4º</option><option value="5º">5º</option><option value="6º">6º</option>
+                                        <option value="7º">7º</option><option value="8º">8º</option><option value="9º">9º</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1 ml-1">Escala Nota</label>
+                                    <select id="edit-max-grade-select" class="master-select text-xs w-full">
+                                        <option value="9">Hasta 9</option>
+                                        <option value="10">Hasta 10</option>
+                                        <option value="12">Hasta 12</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1 ml-1">Curso o Subsistema</label>
+                                <select id="edit-course-select" class="master-select text-xs w-full">
+                                    <option value="EBI">EBI</option><option value="EMS">EMS</option>
+                                    <option value="PEP">PEP</option><option value="PAI">PAI</option>
+                                    <option value="PD">PD</option><option value="POP">POP</option>
+                                    <option value="ESO">ESO</option><option value="FP">FP</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-3 justify-center w-full">
+                    <button onclick="window.addItem()" class="bg-blue-600 px-6 py-2.5 rounded-2xl font-bold text-xs hover:bg-blue-500 transition-colors">+ AÑADIR CRITERIO</button>
+                    <button onclick="window.saveChanges()" id="save-btn" class="bg-green-600 px-8 py-2.5 rounded-2xl font-bold text-xs shadow-xl hover:bg-green-500 transition-colors">💾 GUARDAR EN LA NUBE</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="ai-section" class="hidden px-8 py-6 bg-indigo-900/40 border-t border-white/10 text-white">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <span id="ai-header-title" class="header-font text-xl text-yellow-400 uppercase">Procesando Informe ✨</span>
+                    <div id="ai-loader" class="loader hidden"></div>
+                </div>
+                <button onclick="document.getElementById('ai-section').classList.add('hidden')" class="text-xs text-indigo-300 font-bold">Cerrar</button>
+            </div>
+            <div id="ai-output" class="text-sm text-indigo-50 leading-relaxed bg-black/30 p-6 rounded-2xl border border-indigo-500/30 whitespace-pre-line italic text-white"></div>
+        </div>
+
+        <div class="bg-black/40 p-6 md:p-10 flex flex-row items-center justify-between border-t border-white/10 gap-4 text-white">
+            <div class="flex flex-col items-start">
+                <p class="header-font text-lg md:text-2xl text-indigo-300 leading-none">Puntos Totales</p>
+                <div id="points-counter" class="text-4xl md:text-6xl font-black mt-1 leading-none">0 / 14</div>
+            </div>
+            <div class="flex flex-row items-center gap-4">
+                <div class="flex flex-col items-end hidden sm:flex">
+                    <p class="header-font text-xl md:text-4xl text-yellow-400 leading-none">Nota Final</p>
+                    <span id="grade-scale-display" class="text-[10px] text-yellow-200/60 uppercase italic"></span>
+                </div>
+                <div id="final-grade" class="header-font text-5xl md:text-7xl text-white bg-slate-800/80 px-8 md:px-12 py-3 md:py-4 rounded-2xl shadow-2xl min-w-[100px] md:min-wprefix md:min-w-[150px] text-center border-4 border-yellow-500 transition-all leading-none font-bold">
+                    -
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-black/60 p-3 text-center border-t border-white/5 text-white/40">
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em]">© Daniel Morisio | Multimodal Godot Evaluator 🔒</p>
+        </div>
+    </div>
+
+    <div class="no-print mt-8 flex flex-wrap justify-center gap-3 pb-10">
+        <button onclick="window.handlePrint()" class="bg-white/10 px-5 py-2.5 rounded-2xl font-bold text-[10px] uppercase">🖨️ Imprimir</button>
+        <button onclick="window.shareResults()" class="bg-blue-600/20 px-5 py-2.5 rounded-2xl font-bold text-[10px] uppercase">🔗 Compartir</button>
+        <button onclick="window.generateAIReport('report')" class="bg-purple-600 px-5 py-2.5 rounded-2xl font-bold text-[10px] uppercase shadow-lg shadow-purple-900/20">Informe IA ✨</button>
+        <button onclick="window.generateAIReport('tips')" class="bg-yellow-500 px-5 py-2.5 rounded-2xl font-bold text-[10px] uppercase text-black">TIPS IA ✨</button>
+        <button onclick="window.saveToExcel()" class="bg-green-600 hover:bg-green-500 px-8 py-2.5 rounded-2xl font-bold text-xs uppercase shadow-xl">💾 Exportar Excel</button>
+    </div>
+
+    <div id="toast" class="fixed bottom-10 bg-green-500 text-white px-8 py-4 rounded-2xl font-bold shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none z-50"></div>
+
+    <script>
+        // CLAVE PARA GITHUB (Cámbiala aquí si quieres otra)
+        const localMasterKey = "docente2025"; 
+
+        const apiKeyDefault = ""; 
+        let appData = {
+            title: "PROYECTO VIDEOJUEGO CON GODOT",
+            maxGrade: 10,
+            grade: "1º",
+            courseType: "EBI",
+            geminiKey: "",
+            aiEngine: "gemini",
+            criteria: [
+                { text: "Movimiento del Player (Derecha/Izquierda)", val: 1 },
+                { text: "Salto simple funcional", val: 1 },
+                { text: "Doble salto implementado", val: 1 },
+                { text: "Barra de energía funcional (HUD)", val: 1 },
+                { text: "Vidas con corazones", val: 1 },
+                { text: "Enemigos o trampas que generen daño", val: 1 },
+                { text: "Pérdida de energía/vida al recibir daño", val: 1 },
+                { text: "Game Over al perder todas las vidas", val: 1 },
+                { text: "Movimiento y saltos suaves", val: 1 },
+                { text: "Escenario con fondo y decoración", val: 1 },
+                { text: "Coherencia visual (Sprites y UI)", val: 1 },
+                { text: "Funcionalidad sin errores graves", val: 1 },
+                { text: "Mejoras creativas (Animaciones/Sonidos)", val: 1 },
+                { text: "Documentación o lógica programada", val: 1 }
+            ]
+        };
+        let userProgress = [];
+        window.isMasterMode = false;
+        let indexToDelete = -1;
+        let currentDocente = null;
+
+        window.setDate = function() {
+            const now = new Date();
+            const el = document.getElementById('current-date-display');
+            if (el) el.innerText = `FECHA: ${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+        };
+
+        window.openPassModal = () => {
+            const btn = document.getElementById('login-btn');
+            if(btn) { btn.disabled = false; btn.innerText = "Entrar"; }
+            const infoBox = document.getElementById('offline-notice');
+            if (!window.cloud) { infoBox.classList.remove('hidden'); } else { infoBox.classList.add('hidden'); }
+            document.getElementById('password-modal').classList.remove('hidden');
+        };
+        
+        window.closePassModal = () => {
+            document.getElementById('password-modal').classList.add('hidden');
+            document.getElementById('docente-user-input').value = "";
+            document.getElementById('docente-pass-input').value = "";
+            const btn = document.getElementById('login-btn');
+            if(btn) { btn.disabled = false; btn.innerText = "Entrar"; }
+        };
+
+        window.checkPass = async function() {
+            const user = document.getElementById('docente-user-input').value.trim();
+            const pass = document.getElementById('docente-pass-input').value.trim();
+            const btn = document.getElementById('login-btn');
+            
+            if (!user || !pass) return;
+            btn.disabled = true; btn.innerText = "⏳...";
+
+            // Lógica MODO LOCAL (GitHub)
+            if (!window.cloud) {
+                if (pass === localMasterKey) {
+                    window.loginSuccess(user || "Docente Temporal", appData);
+                    window.showToast("🚀 Modo Sesión activado.");
+                } else {
+                    window.showToast("❌ Clave Incorrecta");
+                    btn.disabled = false; btn.innerText = "Entrar";
+                }
+                return;
+            }
+
+            // Lógica MODO NUBE (Canvas)
+            try {
+                let timeout = 0;
+                while (!window.isCloudReady && timeout < 50) {
+                    await new Promise(r => setTimeout(r, 100));
+                    timeout++;
+                }
+                
+                const docPath = window.cloud.doc(window.cloud.db, 'artifacts', window.cloud.appId, 'public', 'data', 'docentes', user.toLowerCase());
+                const snapshot = await window.cloud.getDoc(docPath);
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.data();
+                    if (data.password === pass) {
+                        window.loginSuccess(user, data.config || appData);
+                        sessionStorage.setItem('last_docente_user', user);
+                    } else { 
+                        window.showToast("❌ Clave incorrecta"); 
+                        btn.disabled = false; btn.innerText = "Entrar"; 
+                    }
+                } else {
+                    await window.cloud.setDoc(docPath, { password: pass, config: appData });
+                    window.loginSuccess(user, appData);
+                    sessionStorage.setItem('last_docente_user', user);
+                    window.showToast("🎁 Docente registrado.");
+                }
+            } catch (e) {
+                window.showToast("❌ Error de conexión.");
+                btn.disabled = false; btn.innerText = "Entrar";
+            }
+        };
+
+        window.loginSuccess = function(user, config) {
+            currentDocente = user;
+            appData = { ...appData, ...config };
+            userProgress = new Array(appData.criteria.length).fill(false);
+            window.isMasterMode = true;
+            window.updateUI();
+            window.closePassModal();
+            window.showToast(`🔓 Sesión activa: ${user}`);
+        };
+
+        window.changeToUser = () => { 
+            window.isMasterMode = false; 
+            currentDocente = null; 
+            sessionStorage.removeItem('last_docente_user');
+            window.updateUI(); 
+            window.showToast("👤 Modo Alumno"); 
+        };
+
+        window.updateUI = () => {
+            const userBtn = document.getElementById('mode-user-btn');
+            const masterBtn = document.getElementById('mode-master-btn');
+            const masterControls = document.getElementById('master-controls');
+            const syncWarning = document.getElementById('sync-warning');
+            if (userBtn) userBtn.classList.toggle('bg-indigo-600', !window.isMasterMode);
+            if (masterBtn) masterBtn.classList.toggle('bg-red-600', window.isMasterMode);
+            if (masterControls) masterControls.classList.toggle('hidden', !window.isMasterMode);
+            if (syncWarning) syncWarning.classList.toggle('hidden', !(!window.cloud && window.isMasterMode));
+            window.render();
+        };
+
+        window.render = function() {
+            const titleEl = document.getElementById('app-title');
+            if (titleEl) titleEl.innerHTML = window.isMasterMode ? `<input type="text" value="${appData.title}" id="edit-title" class="bg-transparent w-full text-center border-none outline-none">` : appData.title;
+            document.getElementById('display-grade').innerText = appData.grade || "1º";
+            document.getElementById('display-course').innerText = appData.courseType || "EBI";
+            document.getElementById('grade-scale-display').innerText = `(Esc: 1 al ${appData.maxGrade})`;
+            const vHeader = document.getElementById('val-header');
+            if (vHeader) vHeader.style.display = window.isMasterMode ? 'table-cell' : 'none';
+            if (window.isMasterMode) {
+                document.getElementById('edit-max-grade-select').value = appData.maxGrade;
+                document.getElementById('edit-grade-select').value = appData.grade;
+                document.getElementById('edit-course-select').value = appData.courseType;
+                document.getElementById('edit-api-key').value = appData.geminiKey || "";
+                document.getElementById('edit-ai-engine').value = appData.aiEngine || "gemini";
+            }
+            const list = document.getElementById('criteria-list');
+            if (list) {
+                list.innerHTML = appData.criteria.map((item, i) => `
+                    <tr class="bg-white/5 text-white">
+                        <td class="p-4 ${userProgress[i] ? 'text-green-400 font-bold' : ''}">
+                            ${window.isMasterMode ? `<input type="text" value="${item.text}" id="text-${i}" class="bg-transparent w-full outline-none">` : `${i+1}. ${item.text}`}
+                        </td>
+                        <td class="p-4 text-center ${window.isMasterMode ? '' : 'hidden'}">
+                            <input type="number" value="${item.val}" id="val-${i}" class="w-12 text-center bg-black/20 rounded">
+                        </td>
+                        <td class="p-4 text-center">
+                            ${window.isMasterMode ? `<button onclick="window.removeItem(${i})" class="text-red-400 text-[10px] font-bold uppercase">Borrar</button>` : `<button onclick="window.toggleCheck(${i})" class="btn-user w-full py-2 rounded-xl text-[10px] font-bold ${userProgress[i] ? 'active' : ''}">${userProgress[i] ? '✓ SI' : 'CUMPLE'}</button>`}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            window.calculate();
+        };
+
+        window.toggleCheck = (i) => { userProgress[i] = !userProgress[i]; window.render(); };
+        window.addItem = () => { appData.criteria.push({text: "Nuevo criterio", val: 1}); userProgress.push(false); window.render(); };
+        window.removeItem = (i) => { indexToDelete = i; document.getElementById('delete-modal').classList.remove('hidden'); };
+        window.closeDeleteModal = () => document.getElementById('delete-modal').classList.add('hidden');
+        window.confirmDelete = () => { appData.criteria.splice(indexToDelete, 1); userProgress.splice(indexToDelete, 1); window.render(); window.closeDeleteModal(); };
+
+        window.calculate = function() {
+            let logrados = 0, max = 0;
+            appData.criteria.forEach((item, i) => { max += item.val; if (!window.isMasterMode && userProgress[i]) logrados += item.val; });
+            document.getElementById('points-counter').innerText = `${logrados.toFixed(1)} / ${max.toFixed(1)}`;
+            const maxGrade = appData.maxGrade || 10;
+            let notaNum = max > 0 && !window.isMasterMode ? (logrados / max) * maxGrade : 0;
+            let nota = max > 0 && !window.isMasterMode ? Math.max(1, Math.round(notaNum)) : "-";
+            const gradeBox = document.getElementById('final-grade');
+            if (gradeBox) {
+                gradeBox.innerText = nota;
+                const porcentaje = max > 0 ? (logrados / max) * 100 : 0;
+                let colorClass = "bg-slate-800/80";
+                if (nota !== "-") {
+                    if (porcentaje >= 80) colorClass = "bg-green-600/80";
+                    else if (porcentaje >= 60) colorClass = "bg-orange-600/80";
+                    else colorClass = "bg-red-600/80";
+                }
+                gradeBox.className = `header-font text-5xl md:text-7xl text-white px-8 md:px-12 py-3 md:py-4 rounded-2xl shadow-2xl min-w-[100px] md:min-w-[150px] text-center border-4 border-yellow-500 transition-all leading-none font-bold ${colorClass}`;
+            }
+        };
+
+        window.saveChanges = async () => {
+            if (!window.cloud) {
+                window.showToast("⚠️ Modo Sesión: Los cambios se mantienen solo mientras la pestaña esté abierta.");
+                appData.title = document.getElementById('edit-title').value;
+                appData.maxGrade = parseInt(document.getElementById('edit-max-grade-select').value);
+                appData.grade = document.getElementById('edit-grade-select').value;
+                appData.courseType = document.getElementById('edit-course-select').value;
+                appData.geminiKey = document.getElementById('edit-api-key').value.trim();
+                appData.aiEngine = document.getElementById('edit-ai-engine').value;
+                appData.criteria.forEach((item, i) => {
+                    const textInput = document.getElementById(`text-${i}`);
+                    const valInput = document.getElementById(`val-${i}`);
+                    if (textInput) item.text = textInput.value;
+                    if (valInput) item.val = parseFloat(valInput.value);
+                });
+                window.render();
+                return;
+            }
+            const btn = document.getElementById('save-btn');
+            if (btn) { btn.disabled = true; btn.innerText = "⏳ Guardando..."; }
+            appData.title = document.getElementById('edit-title').value;
+            appData.maxGrade = parseInt(document.getElementById('edit-max-grade-select').value);
+            appData.grade = document.getElementById('edit-grade-select').value;
+            appData.courseType = document.getElementById('edit-course-select').value;
+            appData.geminiKey = document.getElementById('edit-api-key').value.trim();
+            appData.aiEngine = document.getElementById('edit-ai-engine').value;
+            appData.criteria.forEach((item, i) => {
+                const textInput = document.getElementById(`text-${i}`);
+                const valInput = document.getElementById(`val-${i}`);
+                if (textInput) item.text = textInput.value;
+                if (valInput) item.val = parseFloat(valInput.value);
+            });
+            try {
+                const docPath = window.cloud.doc(window.cloud.db, 'artifacts', window.cloud.appId, 'public', 'data', 'docentes', currentDocente.toLowerCase());
+                await window.cloud.setDoc(docPath, { config: appData }, { merge: true });
+                window.showToast("✅ Configuración guardada en la nube.");
+                window.render();
+            } catch (e) { window.showToast("❌ Error al guardar."); } 
+            finally { if (btn) { btn.disabled = false; btn.innerText = "💾 GUARDAR EN LA NUBE"; } }
+        };
+
+        window.callGemini = async (query) => {
+            const key = appData.geminiKey || apiKeyDefault;
+            const modelId = "gemini-2.5-flash-preview-09-2025";
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < delays.length; i++) {
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${key}`;
+                    const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: query }] }] }) });
+                    if (res.status === 429 && i < delays.length - 1) { await new Promise(r => setTimeout(r, delays[i])); continue; }
+                    if (!res.ok) throw new Error("IA_ERROR");
+                    const data = await res.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text;
+                } catch (e) { if (i === delays.length - 1) throw e; await new Promise(r => setTimeout(r, 1000)); }
+            }
+        };
+
+        window.callGroq = async (query) => {
+            const key = appData.geminiKey; 
+            const modelId = "llama-3.3-70b-versatile";
+            const url = "https://api.groq.com/openai/v1/chat/completions";
+            try {
+                const res = await fetch(url, { method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: modelId, messages: [{ role: "user", content: query }], temperature: 0.7 }) });
+                if (!res.ok) throw new Error("GROQ_ERROR");
+                const data = await res.json();
+                return data.choices?.[0]?.message?.content;
+            } catch (e) { throw e; }
+        };
+
+        window.callOpenRouter = async (query) => {
+            const key = appData.geminiKey;
+            const url = "https://openrouter.ai/api/v1/chat/completions";
+            try {
+                const res = await fetch(url, { method: "POST", headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json", "HTTP-Referer": window.location.href, "X-Title": "Evaluador Godot" }, body: JSON.stringify({ "model": "google/gemini-2.0-flash-exp:free", "messages": [{ "role": "user", "content": query }] }) });
+                if (!res.ok) throw new Error("OPENROUTER_ERROR");
+                const data = await res.json();
+                return data.choices?.[0]?.message?.content;
+            } catch (e) { throw e; }
+        };
+
+        window.generateAIReport = async function(type) {
+            const section = document.getElementById('ai-section');
+            const output = document.getElementById('ai-output');
+            const loader = document.getElementById('ai-loader');
+            const header = document.getElementById('ai-header-title');
+            if (section) section.classList.remove('hidden');
+            if (loader) loader.classList.remove('hidden');
+            if (header) header.innerText = type === 'tips' ? "Tips Técnicos IA ✨" : "Informe Pedagógico IA ✨";
+            if (output) output.innerText = "Consultando a la IA...";
+            const alumno = { nombre: document.getElementById('student-name').value || "[Nombre]", apellido: document.getElementById('student-surname').value || "[Apellido]", grado: appData.grade, curso: appData.courseType };
+            const cumplidos = appData.criteria.filter((_, i) => userProgress[i]).map(c => c.text);
+            const pendientes = appData.criteria.filter((_, i) => !userProgress[i]).map(c => c.text);
+            const nota = document.getElementById('final-grade').innerText;
+            let prompt = "";
+            if (type === 'tips') {
+                prompt = `Instrucción: Analiza el siguiente checklist de Godot Engine del alumno y enfócate ÚNICAMENTE en los objetivos que NO han sido alcanzados. Objetivos no logrados:\n${pendientes.map((p, idx) => `${idx + 1}. ${p}`).join('\n')}\nTarea: Para CADA uno genera un tip técnico específico para Godot. Formato:\n→ [Criterio]: Tip sugerido\nResponde solo tips separados por saltos de línea.`;
+            } else {
+                prompt = `Genera un informe pedagógico para el alumno: ${alumno.nombre} ${alumno.apellido} del curso ${alumno.grado} ${alumno.curso}. Proyecto: ${appData.title}. Nota: ${nota}/${appData.maxGrade}. Logros: ${cumplidos.join(', ')}. Pendientes: ${pendientes.join(', ')}.\nEstructura:\n${alumno.nombre} ${alumno.apellido} ${alumno.grado} ${alumno.curso}\nResumen: [Texto]\nLogros: [Texto]\nAspectos a mejorar: [Texto]\nConclusión: [Texto]\nSolo texto plano.`;
+            }
+            try {
+                let text = "";
+                if (appData.aiEngine === 'groq') text = await window.callGroq(prompt);
+                else if (appData.aiEngine === 'openrouter') text = await window.callOpenRouter(prompt);
+                else text = await window.callGemini(prompt);
+                if (output) output.innerText = text;
+            } catch (e) {
+                if (output) output.innerText = "❌ Error: Límite de cuota excedido o API Key inválida.";
+            } finally { if (loader) loader.classList.add('hidden'); }
+        };
+
+        window.showToast = (msg) => { const t = document.getElementById('toast'); if (t) { t.innerText = msg; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 3000); } };
+        window.handlePrint = () => setTimeout(() => window.print(), 300);
+        window.saveToExcel = () => { const name = document.getElementById('student-name').value || "Alumno"; const surname = document.getElementById('student-surname').value || ""; const grade = document.getElementById('display-grade').innerText; const course = document.getElementById('display-course').innerText; const finalGrade = document.getElementById('final-grade').innerText; const totalPoints = document.getElementById('points-counter').innerText; const data = [ ["INFORME DE EVALUACIÓN - PROYECTO GODOT"], [""], ["Alumno:", `${name} ${surname}`.trim()], ["Grado y Curso:", `${grade} ${course}`], ["Fecha:", new Date().toLocaleDateString()], ["Puntaje:", totalPoints], ["Nota Final:", finalGrade], [""], ["DETALLE DE CRITERIOS", "VALOR", "ESTADO"] ]; appData.criteria.forEach((item, i) => { data.push([item.text, item.val, userProgress[i] ? "CUMPLE" : "NO CUMPLE"]); }); const ws = XLSX.utils.aoa_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Resultado"); XLSX.writeFile(wb, `Evaluacion_${name}_${surname}.xlsx`.replace(/\s+/g, '_')); window.showToast("📊 Excel descargado."); };
+        window.shareResults = async () => { const grade = document.getElementById('final-grade'); const text = `🎮 Proyecto Godot\n⭐ Nota: ${grade ? grade.innerText : "-"}/${appData.maxGrade}`; if (navigator.share) { try { await navigator.share({ title: 'Evaluación Godot', text: text }); } catch(e) {} } else { window.showToast("📋 Usa el botón Imprimir"); } };
+
+        window.onload = () => { window.setDate(); userProgress = new Array(appData.criteria.length).fill(false); window.render(); };
+    </script>
+</body>
+</html>
