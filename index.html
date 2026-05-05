@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Godot Eval Pro</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Quicksand:wght@400;700&display=swap" rel="stylesheet"><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script><script type="module">import{initializeApp}from"https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";import{getAuth,signInAnonymously,signInWithCustomToken,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";let cfg={};try{cfg=null||JSON.parse(typeof __firebase_config!=='undefined'?__firebase_config:'{}')}catch(e){}const aid=typeof __app_id!=='undefined'?__app_id:'evaluador-godot';window._0x_cr=!1;if(cfg&&cfg.apiKey){const a=initializeApp(cfg),au=getAuth(a),db=getFirestore(a);window.cloud={db,auth:au,appId:aid,doc,getDoc,setDoc};const i=async()=>{try{if(typeof __initial_auth_token!=='undefined'&&__initial_auth_token)await signInWithCustomToken(au,__initial_auth_token);else await signInAnonymously(au)}catch(e){}};i();onAuthStateChanged(au,async(u)=>{window.currentUser=u;window._0x_cr=!0;const lu=sessionStorage.getItem('last_docente_user');if(lu&&!window._0x_m){try{const p=doc(db,'artifacts',aid,'public','data','docentes',lu.toLowerCase()),s=await getDoc(p);if(s.exists())window._0x_ls(lu,s.data().config)}catch(e){}}})}else{window.cloud=null;window._0x_cr=!0}</script><style>body{font-family:'Quicksand',sans-serif;background-image:linear-gradient(rgba(15,23,42,.92),rgba(15,23,42,.92)),url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070');background-size:cover;background-position:center;background-attachment:fixed;color:#fff;min-height:100vh}.header-font{font-family:'Luckiest Guy',cursive}.card-glass{background:rgba(30,41,59,.85);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1)}.btn-user{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);transition:.2s}.btn-user.active{background-color:#10b981;border-color:#34d399;box-shadow:0 0 15px rgba(16,185,129,.4)}input.student-input,select.master-select{background:rgba(15,23,42,.95)!important;color:#fff!important;border:1px solid rgba(99,102,241,.4)!important;border-radius:8px;padding:8px;outline:0}.loader{border:3px solid rgba(255,255,255,.1);border-left-color:#fbbf24;border-radius:50%;width:20px;height:20px;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.modal-overlay{background:rgba(0,0,0,.85);backdrop-filter:blur(10px);transition:all .3s;z-index:100}.modal-overlay.hidden{opacity:0;pointer-events:none}@media print{.no-print{display:none!important}body{background:#fff!important;color:#000!important;padding:0!important}.card-glass{background:#fff!important;color:#000!important;border:1px solid #ddd!important;box-shadow:none!important}}</style></head>
+<body class="p-4 md:p-10 flex flex-col items-center text-white">
+    <div id="password-modal" class="fixed inset-0 flex items-center justify-center hidden no-print modal-overlay">
+        <div class="bg-slate-800 border-2 border-indigo-500 p-6 rounded-3xl shadow-2xl w-80 text-center">
+            <h3 class="header-font text-xl mb-2 uppercase">Acceso</h3>
+            <div id="offline-notice" class="hidden mb-4 p-3 bg-yellow-900/40 border border-yellow-600 rounded-xl text-[8px] uppercase">Modo Sesión (Sin Nube)</div>
+            <div class="space-y-3 mb-4"><input type="text" id="_u" class="w-full student-input text-center" placeholder="Usuario"><input type="password" id="_p" class="w-full student-input text-center" placeholder="Clave"></div>
+            <div class="flex gap-2"><button onclick="window._0x_cl()" class="flex-1 bg-white/10 py-2 rounded-xl text-xs font-bold uppercase">Cerrar</button><button id="login-btn" onclick="window._0x_auth()" class="flex-1 bg-indigo-600 py-2 rounded-xl text-xs font-bold uppercase transition-all">Entrar</button></div>
+        </div>
+    </div>
+    <div id="delete-modal" class="fixed inset-0 z-[110] flex items-center justify-center hidden no-print modal-overlay">
+        <div class="bg-slate-800 border-2 border-red-500 p-6 rounded-3xl shadow-2xl w-80 text-center">
+            <h3 class="header-font text-xl mb-2">¿Eliminar?</h3>
+            <div class="flex gap-2 mt-4"><button onclick="window._0x_cdm()" class="flex-1 bg-white/10 py-2 rounded-xl text-xs">No</button><button onclick="window._0x_cfm()" class="flex-1 bg-red-600 py-2 rounded-xl text-xs">Borrar</button></div>
+        </div>
+    </div>
+    <div class="no-print mb-6 flex gap-4 bg-black/40 p-2 rounded-2xl border border-white/10 shadow-lg">
+        <button onclick="window._0x_tu()" id="m-u" class="px-6 py-1.5 rounded-xl font-bold transition-all bg-indigo-600 text-sm">Alumno</button>
+        <button onclick="window._0x_om()" id="m-m" class="px-6 py-1.5 rounded-xl font-bold transition-all hover:bg-white/10 text-sm">Docente 🔒</button>
+    </div>
+    <div id="main-card" class="w-full max-w-4xl card-glass rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500">
+        <div class="relative bg-gradient-to-r from-indigo-600/90 to-purple-800/90 p-8 text-center border-b border-white/10">
+            <h1 id="a-t" class="header-font text-4xl md:text-5xl uppercase tracking-widest"></h1>
+            <div id="c-d" class="absolute bottom-2 right-4 text-[10px] font-bold text-white/50"></div>
+        </div>
+        <div class="p-6 md:px-10 bg-white/5 border-b border-white/10 flex flex-col md:flex-row items-center justify-center gap-8">
+            <div class="flex flex-col md:flex-row items-center gap-4 md:gap-12">
+                <div class="flex gap-4">
+                    <div class="w-24 md:w-32"><label class="block text-[9px] uppercase font-black text-indigo-300 mb-1 ml-1">Nombre</label><input type="text" id="s-n" class="student-input w-full text-[11px] py-1.5 shadow-inner"></div>
+                    <div class="w-24 md:w-32"><label class="block text-[9px] uppercase font-black text-indigo-300 mb-1 ml-1">Apellido</label><input type="text" id="s-s" class="student-input w-full text-[11px] py-1.5 shadow-inner"></div>
+                </div>
+                <div class="flex flex-row items-center border-l border-white/10 pl-4 md:pl-12 min-w-[150px] gap-3">
+                    <span id="d-g" class="header-font text-5xl text-yellow-400"></span><span id="d-c" class="header-font text-3xl uppercase"></span>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 md:p-8">
+            <table class="w-full text-left border-separate border-spacing-y-3">
+                <thead><tr class="text-indigo-400 uppercase text-[10px] font-black tracking-widest"><th class="px-4 py-2">Criterio</th><th class="px-4 py-2 text-center w-24 no-print-val" id="v-h" style="display:none">Puntos</th><th class="px-4 py-2 text-center w-32 no-print">Acción</th></tr></thead>
+                <tbody id="c-l"></tbody>
+            </table>
+            <div id="m-c" class="hidden no-print mt-6 border-t border-white/10 pt-6">
+                <div id="s-w" class="hidden bg-yellow-500/10 border border-yellow-500/50 p-3 rounded-xl mb-4 text-[10px] text-yellow-200 text-center uppercase font-bold">⚠️ Modo Sesión Libre: Los cambios no se sincronizarán</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                    <div class="bg-black/20 p-5 rounded-3xl border border-indigo-500/10 space-y-4">
+                        <select id="e-a-e" class="master-select text-xs w-full"><option value="gemini">Google Gemini 2.5</option><option value="groq">Groq (Llama 3.3)</option></select>
+                        <input type="password" id="e-a-k" class="bg-black/80 border border-indigo-500/50 rounded-xl px-4 py-2.5 text-xs text-center w-full text-green-400 font-mono outline-none" placeholder="API Key">
+                    </div>
+                    <div class="bg-black/20 p-5 rounded-3xl border border-white/5 space-y-3">
+                        <div class="flex gap-2"><select id="e-g-s" class="master-select text-xs w-full"><option value="1º">1º</option><option value="2º">2º</option><option value="3º">3º</option><option value="4º">4º</option><option value="5º">5º</option><option value="6º">6º</option><option value="7º">7º</option><option value="8º">8º</option><option value="9º">9º</option></select><select id="e-m-g" class="master-select text-xs w-full"><option value="9">Escala 9</option><option value="10">Escala 10</option><option value="12">Escala 12</option></select></div>
+                        <select id="e-c-s" class="master-select text-xs w-full"><option value="EBI">EBI</option><option value="EMS">EMS</option><option value="FPB">FPB</option><option value="EMP">EMP</option><option value="CEA">CEA</option><option value="Bachillerato">Bachillerato</option></select>
+                    </div>
+                </div>
+                <div class="flex gap-3 justify-center"><button onclick="window._0x_ai()" class="bg-blue-600 px-6 py-2.5 rounded-2xl font-bold text-xs">+ AÑADIR</button><button onclick="window._0x_sv()" id="save-btn" class="bg-green-600 px-8 py-2.5 rounded-2xl font-bold text-xs shadow-xl">💾 GUARDAR</button></div>
+            </div>
+        </div>
+        <div id="ai-section" class="hidden px-8 py-6 bg-indigo-900/40 border-t border-white/10">
+            <div class="flex justify-between mb-4"><span id="a-h-t" class="header-font text-xl text-yellow-400 uppercase"></span><div id="ai-loader" class="loader hidden"></div></div>
+            <div id="ai-output" class="text-sm italic bg-black/30 p-6 rounded-2xl border border-indigo-500/30 whitespace-pre-line"></div>
+        </div>
+        <div class="bg-black/40 p-6 md:p-10 flex items-center justify-between border-t border-white/10">
+            <div><p class="header-font text-lg text-indigo-300">Puntos Totales</p><div id="p-c" class="text-4xl md:text-6xl font-black"></div></div>
+            <div class="flex items-center gap-4"><div id="f-g" class="header-font text-5xl md:text-7xl px-8 py-3 rounded-2xl border-4 border-yellow-500 transition-all shadow-2xl"></div></div>
+        </div>
+    </div>
+    <div class="no-print mt-8 flex flex-wrap justify-center gap-3 pb-10">
+        <button onclick="window._0x_pr()" class="bg-white/10 px-5 py-2.5 rounded-2xl text-[10px] uppercase font-bold">🖨️ Imprimir</button>
+        <button onclick="window._0x_rep('report')" class="bg-purple-600 px-5 py-2.5 rounded-2xl text-[10px] font-bold uppercase">Informe IA ✨</button>
+        <button onclick="window._0x_rep('tips')" class="bg-yellow-500 px-5 py-2.5 rounded-2xl text-[10px] font-bold uppercase text-black">TIPS IA ✨</button>
+        <button onclick="window._0x_xls()" class="bg-green-600 px-8 py-2.5 rounded-2xl text-[10px] font-bold uppercase">💾 Exportar</button>
+    </div>
+    <div id="tst" class="fixed bottom-10 bg-green-500 px-8 py-4 rounded-2xl font-bold shadow-2xl opacity-0 transition-opacity z-50 pointer-events-none"></div>
+
+<script>
+(function(){
+    let _d={title:"PROYECTO VIDEOJUEGO CON GODOT",maxGrade:10,grade:"1º",courseType:"EBI",geminiKey:"",aiEngine:"gemini",criteria:[{text:"Movimiento Player",val:1},{text:"Salto simple",val:1},{text:"Doble salto",val:1},{text:"HUD Energía",val:1},{text:"Vidas corazones",val:1},{text:"Enemigos/Trampas",val:1},{text:"Detección daño",val:1},{text:"Game Over",val:1},{text:"Suavidad",val:1},{text:"Escenario",val:1},{text:"Visual UI",val:1},{text:"Sin errores",val:1},{text:"Creatividad",val:1},{text:"Lógica/Doc",val:1}]};
+    let _p=[];window._0x_m=!1;let _idx=-1,_cur=null;
+    const _sh=(m)=>{const t=document.getElementById('tst');t.innerText=m;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3000)};
+    window._0x_cl=()=>{document.getElementById('password-modal').classList.add('hidden');const b=document.getElementById('login-btn');if(b){b.disabled=!1;b.innerText="Entrar"}};
+    window._0x_om=()=>{const b=document.getElementById('login-btn');if(b){b.disabled=!1;b.innerText="Entrar"}if(!window.cloud)document.getElementById('offline-notice').classList.remove('hidden');document.getElementById('password-modal').classList.remove('hidden')};
+    window._0x_auth=async()=>{const u=document.getElementById('_u').value.trim(),k=document.getElementById('_p').value.trim(),b=document.getElementById('login-btn');if(!u||!k)return;b.disabled=!0;b.innerText="...";if(!window.cloud){window._0x_ls(u||"Docente",_d);_sh("🚀 Modo Sesión");return}try{if(!window._0x_cr)await new Promise(r=>setTimeout(r,500));const p=window.cloud.doc(window.cloud.db,'artifacts',window.cloud.appId,'public','data','docentes',u.toLowerCase()),s=await window.cloud.getDoc(p);if(s.exists()){if(s.data().password===k){window._0x_ls(u,s.data().config);sessionStorage.setItem('last_docente_user',u)}else{_sh("❌ Error");b.disabled=!1;b.innerText="Entrar"}}else{await window.cloud.setDoc(p,{password:k,config:_d});window._0x_ls(u,_d);sessionStorage.setItem('last_docente_user',u)}}catch(e){b.disabled=!1;b.innerText="Entrar"}};
+    window._0x_ls=(u,c)=>{_cur=u;_d={..._d,...c};_p=new Array(_d.criteria.length).fill(!1);window._0x_m=!0;window._0x_uui();window._0x_cl()};
+    window._0x_tu=()=>{window._0x_m=!1;_cur=null;sessionStorage.removeItem('last_docente_user');window._0x_uui()};
+    window._0x_uui=()=>{document.getElementById('m-u').classList.toggle('bg-indigo-600',!window._0x_m);document.getElementById('m-m').classList.toggle('bg-red-600',window._0x_m);document.getElementById('m-c').classList.toggle('hidden',!window._0x_m);document.getElementById('s-w').classList.toggle('hidden',!(!window.cloud&&window._0x_m));window._0x_rd()};
+    window._0x_rd=()=>{const t=document.getElementById('a-t');t.innerHTML=window._0x_m?`<input type="text" value="${_d.title}" id="e-t" class="bg-transparent w-full text-center border-none outline-none">`:_d.title;document.getElementById('d-g').innerText=_d.grade;document.getElementById('d-c').innerText=_d.courseType;document.getElementById('v-h').style.display=window._0x_m?'table-cell':'none';if(window._0x_m){document.getElementById('e-m-g').value=_d.maxGrade;document.getElementById('e-g-s').value=_d.grade;document.getElementById('e-c-s').value=_d.courseType;document.getElementById('e-a-k').value=_d.geminiKey;document.getElementById('e-a-e').value=_d.aiEngine}const l=document.getElementById('c-l');l.innerHTML=_d.criteria.map((it,i)=>`<tr class="bg-white/5"><td class="p-4 ${(_p[i]&&!window._0x_m)?'text-green-400 font-bold':''}">${window._0x_m?`<input type="text" value="${it.text}" id="tx-${i}" class="bg-transparent w-full">`:`${i+1}. ${it.text}`}</td><td class="p-4 text-center ${window._0x_m?'':'hidden'}"><input type="number" value="${it.val}" id="va-${i}" class="w-12 text-center bg-black/20 rounded"></td><td class="p-4 text-center">${window._0x_m?`<button onclick="window._0x_ri(${i})" class="text-red-400 text-[10px] uppercase font-bold">Borrar</button>`:`<button onclick="window._0x_tg(${i})" class="btn-user w-full py-2 rounded-xl text-[10px] font-bold ${_p[i]?'active':''}">${_p[i]?'✓ SI':'CUMPLE'}</button>`}</td></tr>`).join('');window._0x_calc()};
+    window._0x_tg=(i)=>{_p[i]=!_p[i];window._0x_rd()};
+    window._0x_ai=()=>{_d.criteria.push({text:"Nuevo",val:1});_p.push(!1);window._0x_rd()};
+    window._0x_ri=(i)=>{_idx=i;document.getElementById('delete-modal').classList.remove('hidden')};
+    window._0x_cdm=()=>{document.getElementById('delete-modal').classList.add('hidden')};
+    window._0x_cfm=()=>{_d.criteria.splice(_idx,1);_p.splice(_idx,1);window._0x_rd();window._0x_cdm()};
+    window._0x_calc=()=>{let l=0,m=0;_d.criteria.forEach((it,i)=>{m+=it.val;if(!window._0x_m&&_p[i])l+=it.val});document.getElementById('p-c').innerText=`${l}/${m}`;const n=m>0&&!window._0x_m?Math.max(1,Math.round((l/m)*_d.maxGrade)):"-";const g=document.getElementById('f-g');g.innerText=n;const pc=m>0?(l/m)*100:0;g.className=`header-font text-5xl md:text-7xl px-8 py-3 rounded-2xl border-4 border-yellow-500 transition-all shadow-2xl ${n==='-'?'bg-slate-800/80':(pc>=80?'bg-green-600/80':(pc>=60?'bg-orange-600/80':'bg-red-600/80'))}`};
+    window._0x_sv=async()=>{const b=document.getElementById('save-btn');b.disabled=!0;_d.title=document.getElementById('e-t').value;_d.maxGrade=parseInt(document.getElementById('e-m-g').value);_d.grade=document.getElementById('e-g-s').value;_d.courseType=document.getElementById('e-c-s').value;_d.geminiKey=document.getElementById('e-a-k').value.trim();_d.aiEngine=document.getElementById('e-a-e').value;_d.criteria.forEach((it,i)=>{it.text=document.getElementById(`tx-${i}`).value;it.val=parseFloat(document.getElementById(`va-${i}`).value)});if(!window.cloud){_sh("⚠️ Temporal");window._0x_rd();b.disabled=!1;return}try{const p=window.cloud.doc(window.cloud.db,'artifacts',window.cloud.appId,'public','data','docentes',_cur.toLowerCase());await window.cloud.setDoc(p,{config:_d},{merge:true});_sh("✅ Guardado");window._0x_rd()}catch(e){}_sh("Listo");b.disabled=!1};
+    window._0x_rep=async(t)=>{const s=document.getElementById('ai-section'),o=document.getElementById('ai-output'),l=document.getElementById('ai-loader'),h=document.getElementById('a-h-t');s.classList.remove('hidden');l.classList.remove('hidden');h.innerText=t==='tips'?'Tips Técnicos IA ✨':'Informe Pedagógico IA ✨';o.innerText="Consultando...";const c=_d.criteria.filter((it,i)=>_p[i]).map(x=>x.text),p=_d.criteria.filter((it,i)=>!_p[i]).map(x=>x.text),n=document.getElementById('f-g').innerText;const q=t==='tips'?`Godot: No alcanzados: ${p.join(',')}. 1 tip técnico corto por cada uno.`:`Alumno: ${document.getElementById('s-n').value} ${document.getElementById('s-s').value}. Proyecto: ${_d.title}. Nota: ${n}. Logros: ${c.join(',')}. Pendientes: ${p.join(',')}. Informe corto.`;try{const k=_d.geminiKey;const u=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${k}`;const r=await fetch(u,{method:'POST',body:JSON.stringify({contents:[{parts:[{text:q}]}]})});const rj=await r.json();o.innerText=rj.candidates[0].content.parts[0].text}catch(e){o.innerText="Error API."}finally{l.classList.add('hidden')}};
+    window._0x_pr=()=>setTimeout(()=>window.print(),300);
+    window._0x_xls=()=>{const d=[["EVALUACION"],["Alumno",`${document.getElementById('s-n').value} ${document.getElementById('s-s').value}`],["Nota",document.getElementById('f-g').innerText]];_d.criteria.forEach((it,i)=>d.push([it.text,_p[i]?'SI':'NO']));const ws=XLSX.utils.aoa_to_sheet(d),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Data");XLSX.writeFile(wb,"Eval.xlsx")};
+    window.onload=()=>{const n=new Date();document.getElementById('c-d').innerText=`FECHA: ${n.getDate()}/${n.getMonth()+1}/${n.getFullYear()}`;_p=new Array(_d.criteria.length).fill(!1);window._0x_rd()};
+})();
+</script></body></html>
